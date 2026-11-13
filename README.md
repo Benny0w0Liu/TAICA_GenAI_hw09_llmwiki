@@ -14,7 +14,7 @@
 
 ## GitHub Pages 部署
 
-1. 將儲存庫推送至 GitHub。
+1. 確認根目錄的 `.nojekyll` 檔案也已加入版本控制並推送至 GitHub。此標記會停用 Jekyll，讓網站能讀取 `wiki/` 中的原始 Markdown。
 2. 開啟儲存庫的 **Settings → Pages**。
 3. 在 **Build and deployment** 的 **Source** 選擇 **Deploy from a branch**。
 4. 選擇包含網站檔案的分支（通常是 `main`）及 **/(root)**，然後按 **Save**。

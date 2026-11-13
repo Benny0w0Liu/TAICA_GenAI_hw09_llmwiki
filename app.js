@@ -2,6 +2,17 @@
   "use strict";
 
   const indexPath = "wiki/index.md";
+  const knownCategories = new Map([
+    ["wiki/equipment", "器材"],
+    ["wiki/techniques", "技術動作"],
+    ["wiki/styles", "射箭風格"],
+    ["wiki/biomechanics", "生物力學"],
+    ["wiki/mental", "心理訓練"],
+    ["wiki/athletes", "選手"],
+    ["wiki/competitions", "賽事與規則"],
+    ["wiki/history", "歷史與文化"],
+    ["wiki/concepts", "跨領域概念"]
+  ]);
   const pageCache = new Map();
   const content = document.getElementById("content");
   const navigation = document.getElementById("navigation");
@@ -11,6 +22,7 @@
   const menuToggle = document.getElementById("menu-toggle");
   let pageEntries = [];
   let searchTimer;
+  let searchGeneration = 0;
 
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, function (character) {
@@ -38,7 +50,9 @@
       const request = fetch("./" + normalized.split("/").map(encodeURIComponent).join("/") + ".md")
         .then(function (response) {
           if (!response.ok) {
-            throw new Error("無法讀取 " + normalized + "（HTTP " + response.status + "）");
+            const error = new Error("無法讀取 " + normalized + "（HTTP " + response.status + "）");
+            error.status = response.status;
+            throw error;
           }
           return response.text();
         });
@@ -155,19 +169,33 @@
     });
   }
 
+  function isCategoryPath(path) {
+    return knownCategories.has(path) || pageEntries.some(function (entry) {
+      return entry.path.startsWith(path + "/");
+    });
+  }
+
   async function markMissingWikiLinks(container) {
     const paths = Array.from(new Set(Array.from(container.querySelectorAll("[data-wiki-path]"))
       .map(function (link) { return link.getAttribute("data-wiki-path"); })));
 
     await Promise.all(paths.map(async function (path) {
+      if (isCategoryPath(path)) {
+        return;
+      }
       try {
         await fetchMarkdown(path);
-      } catch (_error) {
-        container.querySelectorAll('[data-wiki-path="' + CSS.escape(path) + '"]').forEach(function (link) {
-          link.classList.add("wiki-link-missing");
-          link.setAttribute("aria-label", link.textContent + "（頁面尚未建立）");
-          link.removeAttribute("data-wiki-path");
-          link.removeAttribute("href");
+      } catch (error) {
+        if (error.status !== 404) {
+          throw error;
+        }
+        container.querySelectorAll("[data-wiki-path]").forEach(function (link) {
+          if (link.getAttribute("data-wiki-path") === path) {
+            link.classList.add("wiki-link-missing");
+            link.setAttribute("aria-label", link.textContent + "（頁面尚未建立）");
+            link.removeAttribute("data-wiki-path");
+            link.removeAttribute("href");
+          }
         });
       }
     }));
@@ -219,19 +247,19 @@
     const entries = pageEntries.filter(function (entry) {
       return entry.path.startsWith(path + "/");
     });
-    if (!entries.length) {
+    if (!entries.length && !knownCategories.has(path)) {
       return false;
     }
-    const category = path.split("/").filter(Boolean).pop();
+    const category = knownCategories.get(path) || path.split("/").filter(Boolean).pop();
     content.innerHTML = '<header><p class="page-kicker">CATEGORY / ARCHERY WIKI</p>' +
       '<h1 class="page-title">' + escapeHtml(category) + "</h1>" +
       '<p class="page-subtitle">瀏覽此分類中收錄的射箭知識條目。</p></header>' +
-      '<div class="article">' + entries.map(function (entry) {
+      '<div class="article">' + (entries.length ? entries.map(function (entry) {
         return '<a class="index-card" href="' + escapeHtml(pageUrl(entry.path)) + '">' +
           "<span><strong>" + escapeHtml(entry.title) + "</strong>" +
           (entry.description ? "<small>" + escapeHtml(entry.description) + "</small>" : "") +
           '</span><span class="index-arrow" aria-hidden="true">↗</span></a>';
-      }).join("") + "</div>";
+      }).join("") : '<p class="empty-state">此分類目前尚未收錄條目。</p>') + "</div>";
     setActiveNavigation("");
     return true;
   }
@@ -299,6 +327,7 @@
 
   async function searchPages(query) {
     const term = query.trim().toLocaleLowerCase();
+    const generation = ++searchGeneration;
     searchResults.hidden = !term;
     if (!term) {
       searchResults.innerHTML = "";
@@ -307,18 +336,17 @@
 
     searchResults.innerHTML = '<p class="empty-state">搜尋中…</p>';
     const pages = await Promise.all(pageEntries.map(async function (entry) {
-      try {
-        const markdown = await fetchMarkdown(entry.path);
-        const text = stripMarkdown(markdown);
-        const position = text.indexOf(term);
-        return position < 0 ? null : {
-          entry: entry,
-          excerpt: text.slice(Math.max(0, position - 35), position + term.length + 65)
-        };
-      } catch (_error) {
-        return null;
-      }
+      const markdown = await fetchMarkdown(entry.path);
+      const text = stripMarkdown(markdown);
+      const position = text.indexOf(term);
+      return position < 0 ? null : {
+        entry: entry,
+        excerpt: text.slice(Math.max(0, position - 35), position + term.length + 65)
+      };
     }));
+    if (generation !== searchGeneration) {
+      return;
+    }
     const results = pages.filter(Boolean).slice(0, 12);
     if (!results.length) {
       searchResults.innerHTML = '<p class="empty-state">找不到符合「' + escapeHtml(query) + '」的頁面。</p>';
