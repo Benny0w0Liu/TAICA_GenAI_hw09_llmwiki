@@ -6,11 +6,7 @@
 
 部署完成後，網站網址為：
 
-`https://<GitHub 使用者名稱>.github.io/<儲存庫名稱>/`
-
-若儲存庫名稱為 `<GitHub 使用者名稱>.github.io`，網址則是：
-
-`https://<GitHub 使用者名稱>.github.io/`
+[https://benny0w0liu.github.io/TAICA_GenAI_hw09_llmwiki/](https://benny0w0liu.github.io/TAICA_GenAI_hw09_llmwiki/)
 
 ## GitHub Pages 部署
 
