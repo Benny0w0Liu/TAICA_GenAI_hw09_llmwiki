@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f5ef">
+    <meta name="description" content="射箭知識庫：器材、技術、賽事與射箭科學。">
+    <title>射箭知識庫</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+    <script defer src="./app.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="射箭知識庫首頁">
+          <span class="brand-mark" aria-hidden="true">弓</span>
+          <span>
+            <strong>射箭知識庫</strong>
+            <small>ARCHERY FIELD NOTES</small>
+          </span>
+        </a>
+        <div class="topbar-actions">
+          <a class="source-link" href="https://github.com/Benny0w0Liu/TAICA_GenAI_hw09_llmwiki" target="_blank" rel="noopener noreferrer">檢視 GitHub ↗</a>
+          <button class="menu-toggle" id="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目錄</button>
+        </div>
+      </header>
+
+      <div class="layout">
+        <aside class="sidebar" id="sidebar" aria-label="知識庫導覽">
+          <form class="search" role="search" id="search-form">
+            <label class="sr-only" for="search-input">搜尋知識庫</label>
+            <span aria-hidden="true">⌕</span>
+            <input id="search-input" type="search" placeholder="搜尋知識庫…" autocomplete="off">
+            <kbd>/</kbd>
+          </form>
+          <div class="search-results" id="search-results" aria-live="polite" hidden></div>
+          <nav class="navigation" id="navigation" aria-label="頁面分類">
+            <p class="loading">正在載入目錄…</p>
+          </nav>
+          <div class="sidebar-footer">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span>持續累積的射箭知識</span>
+          </div>
+        </aside>
+
+        <main class="content" id="content" tabindex="-1">
+          <div class="loading-card" role="status">
+            <span class="loader" aria-hidden="true"></span>
+            <p>正在整理知識，請稍候…</p>
+          </div>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>
